@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * A class concerned with reloading a server-side cache of data, to avoid unnecessary 
@@ -8,7 +11,7 @@
  * @author Abby B. Bullock
  * 
  */
-public abstract class ProjectDataReloader {
+public class ProjectDataReloader {
     
     /**
      * Reload period is 30 seconds
@@ -36,25 +39,37 @@ public abstract class ProjectDataReloader {
      */
     protected int reloadsCounter = 0;
     
+    private final List<DataReloader> dataReloaders;
+    
     public static ProjectDataReloader getReloaderForType(Project project) {
         
+        List<DataReloader> reloaders = new ArrayList<>();
         ProjectType type = project.getType();
         if (type.equals(ProjectType.STATIC)) {
-            return new StaticProjectDataReloader(project);
+            reloaders.add(new LastUpdateTimeReloader(project, new PeriodicReloadPolicy(1)));
         } else if (type.equals(ProjectType.LIVE)) {
-            return new LiveProjectDataReloader(project);
+            reloaders.add(new LoginStatusReloader(project, new PeriodicReloadPolicy(2)));
+            reloaders.add(new LastUpdateTimeReloader(project, new PeriodicReloadPolicy(1)));
+            reloaders.add(new ProjectDetailsReloader(project, new PeriodicReloadPolicy(500)));
         }
-        return null;
+        return new ProjectDataReloader(project, reloaders);
     }
     
-    protected ProjectDataReloader(Project project) {
+    protected ProjectDataReloader(Project project, List<DataReloader> dataReloaders) {
         this.project = project;
+        this.dataReloaders = dataReloaders;
     }
     
     /**
      * The reload method, called once per reload period;
      */
-    protected abstract void reloadProjectData();
+    private void reloadProjectData() {
+        for (DataReloader reloader : dataReloaders) {
+            if (reloader.getReloadPolicy().shouldReload(reloadsCounter)) {
+                new Thread(reloader).start();
+            }
+        }
+    }
     
     public void start() {
         // inline implementation of runnable for reloader thread
