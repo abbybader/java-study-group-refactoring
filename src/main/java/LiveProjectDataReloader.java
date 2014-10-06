@@ -15,16 +15,36 @@ public class LiveProjectDataReloader extends ProjectDataReloader {
     protected void reloadProjectData() {
         // load details every other reload attempt
         if (reloadsCounter % 2 == 0) {
-            loadProjectDetails();
+            new Thread(new Runnable() {
+                
+                @Override
+                public void run() {
+                    loadProjectDetails();
+                }
+            }).start();
         }
         
         //do this often
-        loadLastUpdateTime();
+        new Thread(new Runnable() {
+            
+            @Override
+            public void run() {
+                loadLastUpdateTime();
+                
+            }
+        }).start();
         
         // don't need this very often..
         // load login statistics every five hundred reload attempts
         if (reloadsCounter % 500 == 0) {
-            loadLoginStatistics();
+            new Thread(new Runnable() {
+                
+                @Override
+                public void run() {
+                    loadLoginStatistics();
+                    
+                }
+            }).start();
         }
     }
 
