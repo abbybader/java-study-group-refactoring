@@ -3,8 +3,8 @@ import java.util.Date;
 
 public class LoginStatusReloader extends DataReloader {
 
-    protected LoginStatusReloader(Project project) {
-        super(project);
+    protected LoginStatusReloader(Project project, PeriodicReloadPolicy reloadPolicy) {
+        super(project, reloadPolicy);
     }
 
     @Override

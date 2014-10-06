@@ -3,8 +3,8 @@ import java.util.Date;
 
 public class LastUpdateTimeReloader extends DataReloader {
 
-    protected LastUpdateTimeReloader(Project project) {
-        super(project);
+    protected LastUpdateTimeReloader(Project project, PeriodicReloadPolicy reloadPolicy) {
+        super(project, reloadPolicy);
     }
 
     @Override

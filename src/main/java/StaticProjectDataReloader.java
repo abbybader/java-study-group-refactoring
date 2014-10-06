@@ -11,14 +11,13 @@ public class StaticProjectDataReloader extends ProjectDataReloader {
 
     protected StaticProjectDataReloader(Project project) {
         super(project);
-        loginReloader = new LoginStatusReloader(project);
+        loginReloader = new LoginStatusReloader(project, new PeriodicReloadPolicy(1));
     }
 
     @Override
     protected void reloadProjectData() {
         
-        // load details every other reload attempt
-        if (reloadsCounter % 2 == 0) {
+        if (loginReloader.getReloadPolicy().shouldReload(reloadsCounter)) {
             new Thread( loginReloader).start();
         }
         

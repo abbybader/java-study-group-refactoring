@@ -13,24 +13,22 @@ public class LiveProjectDataReloader extends ProjectDataReloader {
 
     protected LiveProjectDataReloader(Project project) {
         super(project);
-        loginReloader = new LoginStatusReloader(project);
-        lastUpdateReloader = new LastUpdateTimeReloader(project);
-        projectDetailsReloader = new ProjectDetailsReloader(project);
+        loginReloader = new LoginStatusReloader(project, new PeriodicReloadPolicy(2));
+        lastUpdateReloader = new LastUpdateTimeReloader(project, new PeriodicReloadPolicy(1));
+        projectDetailsReloader = new ProjectDetailsReloader(project, new PeriodicReloadPolicy(500));
     }
 
     @Override
     protected void reloadProjectData() {
-        // load details every other reload attempt
-        if (reloadsCounter % 2 == 0) {
+        if (projectDetailsReloader.getReloadPolicy().shouldReload(reloadsCounter)) {
             new Thread(projectDetailsReloader).start();
         }
         
-        //do this often
-        new Thread(lastUpdateReloader).start();
+        if (lastUpdateReloader.getReloadPolicy().shouldReload(reloadsCounter)) {
+            new Thread(lastUpdateReloader).start();
+        }
         
-        // don't need this very often..
-        // load login statistics every five hundred reload attempts
-        if (reloadsCounter % 500 == 0) {
+        if (loginReloader.getReloadPolicy().shouldReload(reloadsCounter)) {
             new Thread(loginReloader).start();
         }
     }

@@ -77,6 +77,7 @@ public abstract class ProjectDataReloader {
                         System.out.println("Starting reloading for project " + project.getName());
                         reloadProjectData();
                         System.out.println("Done reloading for project " + project.getName());
+                        Thread.sleep(50); //sleep a little bit so the printout is readable
                         project.prettyPrint();
                         System.out.println();
 
