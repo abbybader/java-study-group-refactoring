@@ -1,14 +1,14 @@
 
 public class PeriodicReloadPolicy {
     
-    private final int reloadCycleLength;
+    private final long reloadDelayInMillis;
     
-    public PeriodicReloadPolicy(int reloadCycleLength) {
-        this.reloadCycleLength = reloadCycleLength;
+    public PeriodicReloadPolicy(long reloadDelayInMillis) {
+        this.reloadDelayInMillis = reloadDelayInMillis;
     }
     
-    public boolean shouldReload(int reloadsCount) {
-        return (reloadsCount % reloadCycleLength == 0);
+    public long getReloadDelayInMillis() {
+        return reloadDelayInMillis;
     }
 
 }
