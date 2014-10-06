@@ -6,9 +6,12 @@
  * 
  */
 public class LiveProjectDataReloader extends ProjectDataReloader {
+    
+    private final LoginStatusReloader loginReloader;
 
     protected LiveProjectDataReloader(Project project) {
         super(project);
+        loginReloader = new LoginStatusReloader(project);
     }
 
     @Override
@@ -37,14 +40,7 @@ public class LiveProjectDataReloader extends ProjectDataReloader {
         // don't need this very often..
         // load login statistics every five hundred reload attempts
         if (reloadsCounter % 500 == 0) {
-            new Thread(new Runnable() {
-                
-                @Override
-                public void run() {
-                    loadLoginStatistics();
-                    
-                }
-            }).start();
+            new Thread(loginReloader).start();
         }
     }
 
