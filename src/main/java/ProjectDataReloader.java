@@ -15,25 +15,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class ProjectDataReloader {
 
-    /**
-     * Sleep by small portions of 1 second
-     */
-    private static final long SLEEPING_PERIOD = 1000;
+    private final Project project;
 
-    private boolean stopped = false;
-
-    /**
-     * The per-project reloading thread
-     */
-    private Thread thread;
-
-    protected final Project project;
-
-    /**
-     * Counter for how many times the reloadProjectData() method has been called,
-     * used for reloading data types more or less often
-     */
-    protected int reloadsCounter = 0;
+    private ScheduledExecutorService executorService;
 
     private final List<DataReloader> dataReloaders;
 
@@ -56,56 +40,21 @@ public class ProjectDataReloader {
         this.dataReloaders = dataReloaders;
     }
 
-
     public void start() {
-        // inline implementation of runnable for reloader thread
-        thread = new Thread(new Runnable() {
 
-            @Override
-            public void run() {
-                System.out.println("Starting project data reloading thread for project \"" + project.getName()
-                    + "\", type: " + project.getType());
-
-                ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4);
-                for (DataReloader reloader : dataReloaders) {
-                    executorService.scheduleAtFixedRate(reloader, 0, reloader.getReloadPolicy()
-                        .getReloadDelayInMillis(), TimeUnit.MILLISECONDS);
-                }
-
-                while (!stopped) {
-
-                    // check the termination flag
-                    synchronized (ProjectDataReloader.this) {
-                        if (stopped) {
-                            executorService.shutdownNow();
-                            break;
-                        }
-                    }
-
-                    try {
-                        // sleep for SLEEPING_PERIOD
-                        Thread.sleep(SLEEPING_PERIOD);
-                    } catch (InterruptedException ex) {
-                        stopped=true;
-                    }
-
-                }
-
-                System.out.println("Stopped project persistence reloading thread for project \"" + project.getName()
-                    + "\"");
-
-            }
-        });
-
-        thread.start();
+        System.out.println("Starting project data reloading thread for project \"" + project.getName() + "\", type: "
+            + project.getType());
+        executorService = Executors.newScheduledThreadPool(4);
+        for (DataReloader reloader : dataReloaders) {
+            executorService.scheduleAtFixedRate(reloader, 0, reloader.getReloadPolicy().getReloadDelayInMillis(),
+                TimeUnit.MILLISECONDS);
+        }
     }
 
     public void stop() {
-
         System.out
             .println("Stopping project persistence reloading thread for project \"" + project.getName() + "\"...");
-
-        stopped = true;
+        executorService.shutdownNow();
     }
 
     public static void main(String[] args) {
@@ -115,7 +64,7 @@ public class ProjectDataReloader {
 
         reloader1.start();
         try {
-            Thread.sleep(SLEEPING_PERIOD);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
 
         }
