@@ -6,9 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * A class concerned with reloading a server-side cache of data, to avoid unnecessary 
- * and expensive calls outside the system (i.e. to persistence, to login server, etc).  
- * This is NOT good code, but it's realistic code... in that I found it in one of my 
- * systems.  We'll refactor it and make it better.
+ * and expensive calls outside the system (i.e. to persistence, to login server, etc). 
  * 
  * @author Abby B. Bullock
  * 
@@ -22,7 +20,6 @@ public class ProjectDataReloader {
     private final List<DataReloader> dataReloaders;
 
     public static ProjectDataReloader getReloaderForType(Project project) {
-
         List<DataReloader> reloaders = new ArrayList<>();
         ProjectType type = project.getType();
         if (type.equals(ProjectType.STATIC)) {
@@ -42,7 +39,7 @@ public class ProjectDataReloader {
 
     public void start() {
 
-        System.out.println("Starting project data reloading thread for project \"" + project.getName() + "\", type: "
+        System.out.println("Starting project data reloading for project \"" + project.getName() + "\", type: "
             + project.getType());
         executorService = Executors.newScheduledThreadPool(4);
         for (DataReloader reloader : dataReloaders) {
@@ -53,8 +50,8 @@ public class ProjectDataReloader {
 
     public void stop() {
         System.out
-            .println("Stopping project persistence reloading thread for project \"" + project.getName() + "\"...");
-        executorService.shutdownNow();
+            .println("Stopping project data reloading for project \"" + project.getName() + "\"...");
+        executorService.shutdown(); //unless you have a very good reason, politely wait for tasks to finish
     }
 
     public static void main(String[] args) {
