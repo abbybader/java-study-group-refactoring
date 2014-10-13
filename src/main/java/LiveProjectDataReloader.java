@@ -18,34 +18,39 @@ public class LiveProjectDataReloader extends ProjectDataReloader {
     @Override
     protected void scheduleDataLoading() {
 
-        // executor is inherited from ProjectDataReloader
         // Executor interface expects a Runnable, which is a Java thread-related interface
-        executor.scheduleAtFixedRate(new Runnable() {
+        Runnable projectDetailLoader = new Runnable() {
 
             @Override
             public void run() {
                 // load project details using the method from ProjectDataReloader
                 loadProjectDetails();
             }
-            // the executor needs to invoke this runnable immediately, and then every 15 seconds.
-        }, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
-
-        //pretty similar...
-        executor.scheduleAtFixedRate(new Runnable() {
+        };
+        
+        Runnable lastUpdateTimeLoader = new Runnable() {
             @Override
             public void run() {
                 loadLastUpdateTime();
 
             }
-        }, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
+        };
 
-        executor.scheduleAtFixedRate(new Runnable() {
+        Runnable loginStatisticsLoader = new Runnable() {
             @Override
             public void run() {
                 loadLoginStatistics();
 
             }
-        }, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
+        };
+        // executor is inherited from ProjectDataReloader
+        // the executor needs to invoke this runnable immediately, and then every 15 seconds.
+        executor.scheduleAtFixedRate(projectDetailLoader, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
+
+        // pretty similar...
+        
+        executor.scheduleAtFixedRate(lastUpdateTimeLoader, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
+        executor.scheduleAtFixedRate(loginStatisticsLoader, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
     }
 
 }

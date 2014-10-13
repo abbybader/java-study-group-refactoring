@@ -18,14 +18,15 @@ public class StaticProjectDataReloader extends ProjectDataReloader {
     @Override
     protected void scheduleDataLoading() {
 
-        executor.scheduleAtFixedRate(new Runnable() {
+        Runnable loginStatisticsLoader = new Runnable() {
 
             @Override
             public void run() {
                 loadLoginStatistics();
 
             }
-        }, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
+        };
+        executor.scheduleAtFixedRate(loginStatisticsLoader, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
     }
 
 }
