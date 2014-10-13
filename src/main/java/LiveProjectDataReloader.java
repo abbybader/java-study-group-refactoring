@@ -19,9 +19,9 @@ public class LiveProjectDataReloader extends ProjectDataReloader {
     protected void scheduleDataLoading() {
 
         // Define the tasks
-        Runnable projectDetailLoader = new ProjectDetailsLoader(project);
-        Runnable lastUpdateTimeLoader = new LastUpdateTimeLoader(project);
-        Runnable loginStatisticsLoader = new LoginStatisticsLoader(project);
+        DataReloader projectDetailLoader = new ProjectDetailsLoader(project);
+        DataReloader lastUpdateTimeLoader = new LastUpdateTimeLoader(project);
+        DataReloader loginStatisticsLoader = new LoginStatisticsLoader(project);
         
         // Now schedule the tasks
         // executor is inherited from ProjectDataReloader        

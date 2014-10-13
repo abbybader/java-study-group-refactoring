@@ -1,23 +1,17 @@
 import java.util.Date;
 
 
-public class LoginStatisticsLoader implements Runnable {
-
-    private final Project project;
+public class LoginStatisticsLoader extends DataReloader {
     
     public LoginStatisticsLoader(Project project) {
-        this.project = project;
-    }
-    
-    @Override
-    public void run() {
-        loadLoginStatistics();
+        super( project);;
     }
     
     /**
      * Method stub for loading "login statistics". Updates the Project.
      */
-    private void loadLoginStatistics() {
+    @Override
+    protected void loadData() {
         System.out.println("Loading login statistics for project " + project.getName());
         System.out.println("(Talking to our login server via http request)");
         // This might involve other collaborators/helpers to make the http request and 
