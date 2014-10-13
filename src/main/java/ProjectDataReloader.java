@@ -1,5 +1,5 @@
 
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -8,16 +8,14 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * A class concerned with reloading a server-side cache of data, to avoid unnecessary 
- * and expensive calls outside the system (i.e. to persistence, to login server, etc).  
- * This is NOT good code, but it's realistic code... in that I found it in one of my 
- * systems.  We'll refactor it and make it better.
+ * and expensive calls outside the system (i.e. to persistence, to login server, etc).
  * 
  * @author Abby B. Bullock
  * 
  */
-public abstract class ProjectDataReloader {
+public class ProjectDataReloader {
     
-    protected List<DataReloader> dataReloaders;
+    private final List<DataReloader> dataReloaders;
     
     /**
      * A fancy Java interface that handles the scheduling of tasks that need to
@@ -31,7 +29,7 @@ public abstract class ProjectDataReloader {
     private static final int RELOAD_PERIOD = 15;
     private static final TimeUnit RELOAD_PERIOD_UNIT = TimeUnit.SECONDS;
     
-    protected final Project project;
+    private final Project project;
     
     /*
      * Factory method to create a ProjectDataReloader of the appropriate "type"
@@ -40,16 +38,22 @@ public abstract class ProjectDataReloader {
     public static ProjectDataReloader getReloaderForType(Project project) {
         
         ProjectType type = project.getType();
+        List<DataReloader> reloaders = new ArrayList<>();
         if (type.equals(ProjectType.STATIC)) {
-            return new StaticProjectDataReloader(project);
+            reloaders.add(new LoginStatisticsLoader(project));
+            return new ProjectDataReloader(project, reloaders);
         } else if (type.equals(ProjectType.LIVE)) {
-            return new LiveProjectDataReloader(project);
+            reloaders.add(new ProjectDetailsLoader(project));
+            reloaders.add(new LastUpdateTimeLoader(project));
+            reloaders.add(new LoginStatisticsLoader(project));
+            return new ProjectDataReloader(project, reloaders);
         }
         return null;
     }
     
-    protected ProjectDataReloader(Project project) {
+    private ProjectDataReloader(Project project, List<DataReloader> dataReloaders) {
         this.project = project;
+        this.dataReloaders = dataReloaders;
     }
     
     /**
