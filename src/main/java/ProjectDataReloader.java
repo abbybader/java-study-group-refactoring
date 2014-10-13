@@ -1,5 +1,8 @@
 
 import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -14,31 +17,23 @@ import java.util.Date;
 public abstract class ProjectDataReloader {
     
     /**
-     * Reload period is 30 seconds
+     * A fancy Java interface that handles the scheduling of tasks that need to
+     * happen periodically.
      */
-    private static final long RELOAD_PERIOD = 30000;
+    protected ScheduledExecutorService executor;
     
-    /**
-     * Sleep by small portions of 1 second
+    /*
+     * How often should the executor service reload our data?
      */
-    private static final long SLEEPING_PERIOD = 1000;
-
-    
-    private boolean stopped = false;
-
-    /**
-     * The per-project reloading thread
-     */
-    private Thread thread;
+    protected static final int RELOAD_PERIOD = 15;
+    protected static final TimeUnit RELOAD_PERIOD_UNIT = TimeUnit.SECONDS;
     
     protected final Project project;
     
-    /**
-     * Counter for how many times the reloadProjectData() method has been called,
-     * used for reloading data types more or less often
+    /*
+     * Factory method to create a ProjectDataReloader of the appropriate "type"
+     * for a Project.
      */
-    protected int reloadsCounter = 0;
-    
     public static ProjectDataReloader getReloaderForType(Project project) {
         
         ProjectType type = project.getType();
@@ -55,82 +50,29 @@ public abstract class ProjectDataReloader {
     }
     
     /**
-     * The reload method, called once per reload period;
+     * Method to schedule the reloading of project data
      */
-    protected abstract void reloadProjectData();
+    protected abstract void scheduleDataLoading();
     
     public void start() {
-        // inline implementation of runnable for reloader thread
-        thread = new Thread(new Runnable() {
-
+        
+        System.out.println("Starting project data reloading thread for project \"" + project.getName() + "\", type: "
+            + project.getType());
+        executor = Executors.newScheduledThreadPool(4);
+        scheduleDataLoading();
+        executor.scheduleAtFixedRate(new Runnable() {
+            
             @Override
             public void run() {
-                System.out.println("Starting project data reloading thread for project \"" + project.getName() + "\", type: "
-                    + project.getType());
-
-                while (!stopped) {
-
-                    // remember the start time
-                    long s = System.currentTimeMillis();
-
-                    try {
-
-                        // call a project-type-specific reloading procedure that reloads some of the project data from
-                        // persistence
-                        System.out.println("Starting reloading for project " + project.getName());
-                        reloadProjectData();
-                        System.out.println("Done reloading for project " + project.getName());
-                        project.prettyPrint();
-                        System.out.println();
-
-                        // check the termination flag
-                        synchronized (ProjectDataReloader.this) {
-                            if (stopped) {
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Could not load project data for ptoject " + project.getName() + " : "
-                            + e.getMessage());
-                    }
-
-                    // calculate the time taken for the reload
-                    long timeUsedForLastReload = System.currentTimeMillis() - s;
-
-                    // sleep until next fetch
-                    if (timeUsedForLastReload < RELOAD_PERIOD) {
-                        long timeLeftToSleep = RELOAD_PERIOD - timeUsedForLastReload;
-
-                        while (timeLeftToSleep > 0) {
-
-                            // check the termination flag
-                            synchronized (ProjectDataReloader.this) {
-                                if (stopped) {
-                                    break;
-                                }
-                            }
-
-                            try {
-                                // sleep for SLEEPING_PERIOD
-                                Thread.sleep(SLEEPING_PERIOD);
-                            } catch (InterruptedException ex) {
-                                continue;
-                            }
-
-                            // dec the timeLeft
-                            timeLeftToSleep -= SLEEPING_PERIOD;
-                        }
-                    }
-                    reloadsCounter++;
-                }
-
-                System.out.println("Stopped project persistence reloading thread for project \"" + project.getName() + "\"");
+                //periodically print our project
+                project.prettyPrint();
             }
-        });
-
-        thread.start();
+        }, 1, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
     }
     
+    /**
+     * Method stub for loading "project details". Updates the Project.
+     */
     protected void loadProjectDetails() {
         System.out.println("Loading project details for project " + project.getName());
         System.out.println("(Talking to database and updating our project-related objects.)");
@@ -155,7 +97,10 @@ public abstract class ProjectDataReloader {
         //... Cache fresh data
         project.setProjectDetails("Project details created: " + new Date(System.currentTimeMillis()));
     }
-    
+
+    /**
+     * Method stub for loading "last update time". Updates the Project.
+     */
     protected void loadLastUpdateTime() {
         System.out.println("Loading last update time for project " + project.getName());
         System.out.println("(Checking the database to see when the data was last refreshed)");
@@ -176,7 +121,10 @@ public abstract class ProjectDataReloader {
         //... Cache fresh data
         project.setLastUpdateTime("Project update time calculated: " + new Date(System.currentTimeMillis()));
     }
-    
+
+    /**
+     * Method stub for loading "login statistics". Updates the Project.
+     */
     protected void loadLoginStatistics() {
         System.out.println("Loading login statistics for project " + project.getName());
         System.out.println("(Talking to our login server via http request)");
@@ -201,7 +149,15 @@ public abstract class ProjectDataReloader {
         
         System.out.println("Stopping project persistence reloading thread for project \"" + project.getName() + "\"...");
         
-        stopped = true;
+        executor.shutdown();
+        
+        try {
+            Thread.sleep(60000);
+        } catch (InterruptedException e) {
+            // we're shutting down anyway
+        }
+        
+        executor.shutdownNow();
     }
     
     public static void main(String[] args) {
@@ -211,7 +167,7 @@ public abstract class ProjectDataReloader {
         
         reloader1.start();
         try {
-            Thread.sleep(SLEEPING_PERIOD);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             
         }

@@ -1,8 +1,6 @@
-
 /**
  * A reloader for projects that are no longer "live."  Project details and data
- * are not expected to change, so only login statistics are required to be kept
- * fresh.
+ * are not expected to change.
  *
  */
 public class StaticProjectDataReloader extends ProjectDataReloader {
@@ -11,21 +9,23 @@ public class StaticProjectDataReloader extends ProjectDataReloader {
         super(project);
     }
 
+    /**
+     * A "static" project's data doesn't change anymore, so we only need to refresh
+     * "login statistics."  The executor will periodically (about once every 
+     * RELOAD_PERIOD) execute the runnable defined below, which will invoke the login-
+     * related loading method.
+     */
     @Override
-    protected void reloadProjectData() {
-        
-        // load details every other reload attempt
-        if (reloadsCounter % 2 == 0) {
-            new Thread( new Runnable() {
-                
-                @Override
-                public void run() {
-                    loadLoginStatistics();
-                    
-                }
-            }).start();
-        }
-        
+    protected void scheduleDataLoading() {
+
+        executor.scheduleAtFixedRate(new Runnable() {
+
+            @Override
+            public void run() {
+                loadLoginStatistics();
+
+            }
+        }, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
     }
 
 }

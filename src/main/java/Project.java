@@ -45,12 +45,14 @@ public class Project {
     }
 
     public void prettyPrint() {
+        System.out.println();
+        System.out.println("********");
         System.out.println("Project: " + getName() + "; type: " + getType());
         System.out.println(getProjectDetails());
         System.out.println(getLastUpdateTime());
         System.out.println(getLoginStatistics());
-        
-        
+        System.out.println("********");
+        System.out.println();
     }
     
     
