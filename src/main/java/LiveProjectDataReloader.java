@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Reloader for a "live" project, where project data is expected to change
@@ -7,8 +6,6 @@ import java.util.List;
  * 
  */
 public class LiveProjectDataReloader extends ProjectDataReloader {
-    
-    private List<DataReloader> dataReloaders;
 
     protected LiveProjectDataReloader(Project project) {
         super(project);
@@ -17,13 +14,4 @@ public class LiveProjectDataReloader extends ProjectDataReloader {
         dataReloaders.add(new LastUpdateTimeLoader(project));
         dataReloaders.add(new LoginStatisticsLoader(project));
     }
-
-    @Override
-    protected void scheduleDataLoading() {
-
-        for (DataReloader reloader : dataReloaders ) { 
-            executor.scheduleAtFixedRate(reloader, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
-        }
-    }
-
 }

@@ -1,5 +1,6 @@
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,17 +17,19 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class ProjectDataReloader {
     
+    protected List<DataReloader> dataReloaders;
+    
     /**
      * A fancy Java interface that handles the scheduling of tasks that need to
      * happen periodically.
      */
-    protected ScheduledExecutorService executor;
+    private ScheduledExecutorService executor;
     
     /*
      * How often should the executor service reload our data?
      */
-    protected static final int RELOAD_PERIOD = 15;
-    protected static final TimeUnit RELOAD_PERIOD_UNIT = TimeUnit.SECONDS;
+    private static final int RELOAD_PERIOD = 15;
+    private static final TimeUnit RELOAD_PERIOD_UNIT = TimeUnit.SECONDS;
     
     protected final Project project;
     
@@ -52,7 +55,11 @@ public abstract class ProjectDataReloader {
     /**
      * Method to schedule the reloading of project data
      */
-    protected abstract void scheduleDataLoading();
+    private void scheduleDataLoading() {
+        for (DataReloader reloader : dataReloaders ) { 
+            executor.scheduleAtFixedRate(reloader, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
+        }
+    }
     
     public void start() {
         
