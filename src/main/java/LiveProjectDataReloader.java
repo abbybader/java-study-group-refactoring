@@ -18,37 +18,14 @@ public class LiveProjectDataReloader extends ProjectDataReloader {
     @Override
     protected void scheduleDataLoading() {
 
-        // Executor interface expects a Runnable, which is a Java thread-related interface
-        Runnable projectDetailLoader = new Runnable() {
-
-            @Override
-            public void run() {
-                // load project details using the method from ProjectDataReloader
-                loadProjectDetails();
-            }
-        };
+        // Define the tasks
+        Runnable projectDetailLoader = new ProjectDetailsLoader(project);
+        Runnable lastUpdateTimeLoader = new LastUpdateTimeLoader(project);
+        Runnable loginStatisticsLoader = new LoginStatisticsLoader(project);
         
-        Runnable lastUpdateTimeLoader = new Runnable() {
-            @Override
-            public void run() {
-                loadLastUpdateTime();
-
-            }
-        };
-
-        Runnable loginStatisticsLoader = new Runnable() {
-            @Override
-            public void run() {
-                loadLoginStatistics();
-
-            }
-        };
-        // executor is inherited from ProjectDataReloader
-        // the executor needs to invoke this runnable immediately, and then every 15 seconds.
+        // Now schedule the tasks
+        // executor is inherited from ProjectDataReloader        
         executor.scheduleAtFixedRate(projectDetailLoader, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
-
-        // pretty similar...
-        
         executor.scheduleAtFixedRate(lastUpdateTimeLoader, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
         executor.scheduleAtFixedRate(loginStatisticsLoader, 0, RELOAD_PERIOD, RELOAD_PERIOD_UNIT);
     }
